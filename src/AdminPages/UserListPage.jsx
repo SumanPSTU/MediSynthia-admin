@@ -141,7 +141,7 @@ const UserListPage = () => {
                       {(page - 1) * limit + index + 1}
                     </td>
                     <td className="px-4 py-3 border-t font-medium">
-                      {user.name || "—"}
+                      {user.username || "—"}
                     </td>
                     <td className="px-4 py-3 border-t">{user.email}</td>
                     <td className="px-4 py-3 border-t">

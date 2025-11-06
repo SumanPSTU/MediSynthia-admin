@@ -14,7 +14,7 @@ import ErrorBoundary from '../AdminPages/ErrorBoundary.jsx';
 import ProductsListPage from '../AdminPages/ProductsPage.jsx';
 import OrderListPage from '../AdminPages/OrderListPage.jsx';
 // Context
-import { useAuth } from '../../../admin-frontend/src/hooks/useAuth.js';
+import { useAuth } from '../hooks/useAuth.js';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
