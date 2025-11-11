@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, LogIn, UserPlus, Key, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext.jsx";
-import { adminApi } from "../api/adminApi";
+import { adminApi } from "../api/adminApi.js";
 
 export default function AdminAuth() {
   const { isDayMode } = useTheme();
@@ -17,7 +17,7 @@ export default function AdminAuth() {
   // Form states
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState({
-    name: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -65,7 +65,7 @@ export default function AdminAuth() {
     setLoading(true);
     setError("");
     try {
-      await adminApi.forgotPassword({ email: forgotEmail });
+      await adminApi.forgetPassword({ email: forgotEmail });
       setError("Password reset email sent");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to send reset email");
@@ -196,7 +196,7 @@ export default function AdminAuth() {
                   placeholder="Full Name"
                   value={registerData.name}
                   onChange={(e) =>
-                    setRegisterData({ ...registerData, name: e.target.value })
+                    setRegisterData({ ...registerData, username: e.target.value })
                   }
                   required
                   className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-400 focus:outline-none transition"

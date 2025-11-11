@@ -15,6 +15,7 @@ import ProductsListPage from '../AdminPages/ProductsPage.jsx';
 import OrderListPage from '../AdminPages/OrderListPage.jsx';
 // Context
 import { useAuth } from '../hooks/useAuth.js';
+import VerifyAdmin from '../AdminPages/VerifyAdmin.jsx';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -43,6 +44,7 @@ const AppRoutes = () => (
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forget-password" element={<ForgetPasswordPage />} />
       <Route path="/change-password" element={<ChangePasswordPage />} />
+      <Route path="/verify/:token" element={<VerifyAdmin/>} />
 
       {/* Protected Routes */}
       {/* <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />

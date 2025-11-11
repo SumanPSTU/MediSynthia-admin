@@ -39,12 +39,14 @@ const UserListPage = () => {
       setLoading(true);
       const response = await adminApi.searchUsers(search);
       if (response.data.success) {
+        
         setUsers(response.data.results || []); // <-- corrected here
+  
         setTotalPages(1);
         setPage(1);
       }
     } catch (error) {
-      console.error(error);
+    
       toast.error("Search failed");
     } finally {
       setLoading(false);
@@ -85,7 +87,7 @@ const UserListPage = () => {
       </div>
 
       {/* Search */}
-      <form onSubmit={handleSearch} className="flex items-center gap-3 mb-6">
+      <form onKeyUp={handleSearch} className="flex items-center gap-3 mb-6">
         <div className="flex items-center w-full md:w-96 border border-gray-300 rounded-md px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500 bg-white">
           <Search className="w-5 h-5 text-gray-500 mr-2" />
           <input
