@@ -5,7 +5,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 // Pages
 import LoginPage from '../AdminPages/LoginPage.jsx';
 import RegisterPage from '../AdminPages/RegisterPage.jsx';
-import OtpVerificationPage from '../AdminPages/OtpVerificationPage.jsx';
 import ForgetPasswordPage from '../AdminPages/ForgetPasswordPage.jsx';
 import ChangePasswordPage from '../AdminPages/ChangePasswordPage.jsx';
 import DashboardPage from '../AdminPages/DashboardPage.jsx';
@@ -16,6 +15,7 @@ import OrderListPage from '../AdminPages/OrderListPage.jsx';
 // Context
 import { useAuth } from '../hooks/useAuth.js';
 import VerifyAdmin from '../AdminPages/VerifyAdmin.jsx';
+import VerifyLoginOTP from '../AdminPages/verifyLoginOTP.jsx';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -40,11 +40,11 @@ const AppRoutes = () => (
 
       {/* Public Routes */}
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/verify-otp" element={<OtpVerificationPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forget-password" element={<ForgetPasswordPage />} />
       <Route path="/change-password" element={<ChangePasswordPage />} />
       <Route path="/verify/:token" element={<VerifyAdmin/>} />
+      <Route path="/verifyotp" element={<VerifyLoginOTP/>}/>
 
       {/* Protected Routes */}
       {/* <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />

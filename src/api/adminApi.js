@@ -11,7 +11,7 @@ const apiClient = axios.create({
   },
 });
 
-// Attach access token if available
+// Attach access token automatically from localStorage
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken');
   if (token) {
@@ -24,10 +24,7 @@ apiClient.interceptors.request.use((config) => {
 export const adminApi = {
   // Admin Auth
   register: (data) => apiClient.post('/admin/register', data),
-  verifyEmail: (token) =>
-    apiClient.post('/admin/verify', {}, {
-      headers: { Authorization: `Bearer ${token}` },
-    }),
+  verifyEmail: () => apiClient.post('/admin/verify'), // token sent automatically by interceptor
   login: (data) => apiClient.post('/admin/login', data),
   verifyOtp: (email, data) => apiClient.post(`/admin/verify/${email}`, data),
   logout: () => apiClient.post('/admin/logout'),
@@ -39,9 +36,9 @@ export const adminApi = {
 
   // Users
   getUsers: (page = 1, limit = 10) =>
-    apiClient.get(`/admin/alluser?page=${page}&limit=${limit}`), // fixed: use apiClient
+    apiClient.get(`/admin/alluser?page=${page}&limit=${limit}`),
   searchUsers: (search) =>
-    apiClient.get(`/admin/search-user?search=${encodeURIComponent(search)}`), // fixed
+    apiClient.get(`/admin/search-user?search=${encodeURIComponent(search)}`), // token auto via interceptor
 
   // Prescriptions (optional)
   getAllPrescriptions: () => apiClient.get('/admin/get-all-prescription'),

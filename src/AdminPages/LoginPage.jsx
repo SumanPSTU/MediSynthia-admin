@@ -5,6 +5,7 @@ import { Eye, EyeOff, LogIn, UserPlus, Key, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext.jsx";
 import { adminApi } from "../api/adminApi.js";
+import toast from "react-hot-toast";
 
 export default function AdminAuth() {
   const { isDayMode } = useTheme();
@@ -27,13 +28,17 @@ export default function AdminAuth() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    localStorage.setItem("email", loginData.email);
     setLoading(true);
     setError("");
     try {
       const res = await adminApi.login(loginData);
-      localStorage.setItem("adminToken", res.data.token);
-      localStorage.setItem("adminName", res.data.admin.name);
-      navigate("/dashboard");
+      toast.success(res.data.message);
+      setTimeout(() => {
+        setLoginData({email:"",password:""})
+        navigate("/verifyotp");
+      }, 2000);
+      
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     } finally {
@@ -167,7 +172,7 @@ export default function AdminAuth() {
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeOff /> : <Eye />}
+                    {showPassword ?  <Eye />:<EyeOff /> }
                   </button>
                 </div>
 
