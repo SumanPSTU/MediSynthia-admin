@@ -2,16 +2,18 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, LogIn, UserPlus, Key, ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import {  useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext.jsx";
+import { useAuth } from "../hooks/useAuth.js";
 import { adminApi } from "../api/adminApi.js";
 import toast from "react-hot-toast";
 
 export default function AdminAuth() {
   const { isDayMode } = useTheme();
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const [activeTab, setActiveTab] = useState("login"); // login | register | forgot
+  const [activeTab, setActiveTab] = useState("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -34,11 +36,27 @@ export default function AdminAuth() {
     try {
       const res = await adminApi.login(loginData);
       toast.success(res.data.message);
+      // If backend returned tokens (already verified) -> log in and go to dashboard
+      const accessToken = res.data.accessToken || res.data.token || res.data.data?.accessToken;
+      const refreshToken = res.data.refreshToken || res.data.data?.refreshToken;
+      if (accessToken) {
+        localStorage.setItem("accessToken", accessToken);
+        if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+        // update auth context
+        login({ accessToken, refreshToken, email: loginData.email });
+        setTimeout(() => {
+          setLoginData({ email: "", password: "" });
+          navigate("/dashboard");
+        }, 800);
+        return;
+      }
+
+      // Otherwise proceed to OTP verification
       setTimeout(() => {
-        setLoginData({email:"",password:""})
+        setLoginData({ email: "", password: "" });
         navigate("/verifyotp");
-      }, 2000);
-      
+      }, 800);
+
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     } finally {
@@ -56,8 +74,10 @@ export default function AdminAuth() {
       return;
     }
     try {
-      await adminApi.register(registerData);
-      setActiveTab("login");
+      const res = await adminApi.register(registerData);
+      toast.success("Registration successful! Please verify your email.");
+      localStorage.setItem("superAdminEmail", res.data.superAdminEmail);
+      navigate("/registeradmininfo");
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
     } finally {
@@ -117,11 +137,10 @@ export default function AdminAuth() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`text-sm font-medium px-3 py-1 rounded-full transition ${
-                  activeTab === tab
+                className={`text-sm font-medium px-3 py-1 rounded-full transition ${activeTab === tab
                     ? "bg-emerald-500 text-white"
                     : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-                }`}
+                  }`}
               >
                 {tab === "login" && "Login"}
                 {tab === "register" && "Register"}
@@ -172,7 +191,7 @@ export default function AdminAuth() {
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ?  <Eye />:<EyeOff /> }
+                    {showPassword ? <Eye /> : <EyeOff />}
                   </button>
                 </div>
 

@@ -3,10 +3,12 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Menu, X, LogOut, LogIn, LayoutDashboard,
-  Users, Pill, Moon, Sun, UserCircle, ShoppingBag
+  Users, Pill, Moon, Sun, UserCircle, ShoppingBag,
+  File
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../contexts/ThemeContext.jsx";
+import { useAuth } from "../hooks/useAuth.js";
 
 export default function AdminNavbar() {
   const navigate = useNavigate();
@@ -14,35 +16,28 @@ export default function AdminNavbar() {
   const { isDayMode, toggleTheme } = useTheme();
 
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [adminName, setAdminName] = useState("");
+  const { isAuthenticated, admin, logout } = useAuth();
+  const adminName = admin?.username || admin?.name || localStorage.getItem("adminName") || "";
 
   const MotionLink = motion(Link);
 
-  useEffect(() => {
-    const admin = localStorage.getItem("adminName");
-    if (admin) {
-      setIsLoggedIn(true);
-      setAdminName(admin);
-    }
-  }, []);
-
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (window.confirm("Are you sure you want to logout?")) {
-      localStorage.clear();
-      setIsLoggedIn(false);
-      setAdminName("");
+      await logout();
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       navigate("/login");
     }
   };
 
-  const handleLogin = () => navigate("/login");
+  
 
   const navLinks = [
     { name: "Dashboard", to: "/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
     { name: "Users", to: "/users-list", icon: <Users className="w-5 h-5" /> },
     { name: "Products", to: "/products-list", icon: <Pill className="w-5 h-5" /> },
     { name: "Orders", to: "/orders-list", icon: <ShoppingBag className="w-5 h-5" /> },
+    {name:"Prescriptions", to:"/prescriptions-list", icon:<File className="w-5 h-5"/>}
   ];
 
   const NavLinks = ({ onClick, vertical }) => (
@@ -71,16 +66,15 @@ export default function AdminNavbar() {
 
   return (
     <nav
-      className={`fixed top-0 w-full z-50 backdrop-blur-md shadow-lg transition-all duration-500 ${isDayMode
-        ? "bg-white/60 border-b border-emerald-100"
-        : "bg-gradient-to-r from-gray-900 via-gray-800 to-gray-950 border-b border-gray-700 text-gray-100 shadow-xl"
+      className={`fixed top-0 w-full z-50 backdrop-blur-md shadow-lg transition-all duration-500 "bg-white/60 border-b border-emerald-100"
+       
         }`}
     >
       <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
         {/* Logo */}
         <Link to="/dashboard" className="text-xl font-bold flex items-center gap-2">
           <motion.span
-            className={`bg-gradient-to-r ${isDayMode ? "from-emerald-600 to-teal-400" : "from-cyan-400 to-teal-400"} bg-clip-text text-transparent`}
+            className={`bg-gradient-to-r ${"from-emerald-600 to-teal-400"} bg-clip-text text-transparent`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
@@ -89,24 +83,18 @@ export default function AdminNavbar() {
           <span className="text-sm opacity-70 font-semibold">Admin</span>
         </Link>
 
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={toggleTheme}
-          className={`relative flex items-center justify-center w-14 h-8 rounded-full transition-all ${isDayMode ? "bg-emerald-300" : "bg-cyan-700/80 shadow-inner shadow-cyan-400/50"
-            }`}
-        >
+        <motion.button>
           <motion.span
             layout
             className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-md transition-transform ${isDayMode ? "translate-x-0" : "translate-x-6"}`}
           />
-          {isDayMode ? <Sun className="absolute right-2 w-4 h-4 text-yellow-500" /> : <Moon className="absolute left-2 w-4 h-4 text-blue-300" />}
         </motion.button>
 
         {/* Desktop Navbar */}
         <div className="hidden md:flex items-center gap-6">
           <NavLinks vertical={false} />
           <div className="flex items-center gap-4 border-l pl-4">
-            {isLoggedIn && (
+            {isAuthenticated && (
               <>
                 <UserCircle className={`w-6 h-6 ${isDayMode ? "text-emerald-500" : "text-cyan-400"}`} />
                 <span className={isDayMode ? "" : "text-cyan-200"}>{adminName}</span>
@@ -153,7 +141,7 @@ export default function AdminNavbar() {
               </div>
 
               {/* Admin Info */}
-              {isLoggedIn && (
+              {isAuthenticated && (
                 <div className="flex items-center gap-3 mb-6 p-3 rounded-lg bg-gray-100/50 dark:bg-gray-800/50">
                   <UserCircle className={`w-6 h-6 ${isDayMode ? "text-emerald-500" : "text-cyan-400"}`} />
                   <span className={isDayMode ? "" : "text-cyan-200"}>{adminName}</span>
@@ -165,7 +153,7 @@ export default function AdminNavbar() {
 
               {/* Footer Actions */}
               <div className="flex flex-col gap-4 mt-6">
-                {isLoggedIn && (
+                {isAuthenticated && (
                   <button onClick={() => { handleLogout(); setIsMobileOpen(false); }}
                     className="flex items-center gap-2 text-red-500 hover:text-red-600 px-4 py-2 rounded-lg transition-all bg-red-50 dark:bg-gray-800/50">
                     <LogOut className="w-5 h-5" /> Logout

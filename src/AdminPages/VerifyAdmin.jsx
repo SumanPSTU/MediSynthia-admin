@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { adminApi } from "../api/adminApi";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -11,21 +12,12 @@ const VerifyAdmin = () => {
   const [message, setMessage] = useState("Verifying...");
   const [status, setStatus] = useState("loading");
 
-  const apiClient = axios.create({
-    baseURL: API_BASE_URL,
-    headers: { "Content-Type": "application/json" },
-  });
-
   useEffect(() => {
     const verifyAdmin = async () => {
       if (!token) return setMessage("No token found in URL");
 
       try {
-        const res = await apiClient.post(
-          "/admin/verify",
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await adminApi.verifyWithToken(token);
 
         setMessage(res.data.message || "Admin verified successfully!");
         setStatus("success");

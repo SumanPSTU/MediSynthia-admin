@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { adminApi } from "../api/adminApi";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth.js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -11,6 +13,7 @@ const VerifyLoginOTP = () => {
   const [timeLeft, setTimeLeft] = useState(180);
   const [isExpired, setIsExpired] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
   const inputsRef = useRef([]);
 
   // ⏳ Timer countdown
@@ -65,14 +68,22 @@ const VerifyLoginOTP = () => {
 
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE_URL}/admin/verify/${email}`, { otp: otpValue });
+      const res = await adminApi.verifyOtp(email, { otp: otpValue });
 
       if (!res.data?.success) return toast.error(res.data?.message || "Verification failed");
 
-      localStorage.setItem("accessToken", res.data.accessToken);
-      localStorage.setItem("refreshToken", res.data.refreshToken);
-      toast.success(res.data.message || "OTP verified successfully!");
+      const at = res.data.accessToken || res.data.data?.accessToken;
+      const rt = res.data.refreshToken || res.data.data?.refreshToken;
+      if (at) {
+        localStorage.setItem("accessToken", at);
+        if (rt) localStorage.setItem("refreshToken", rt);
+        login({ accessToken: at, refreshToken: rt, email });
+        toast.success(res.data.message || "OTP verified successfully!");
+        setTimeout(() => navigate("/dashboard"), 500);
+        return;
+      }
 
+      toast.success(res.data.message || "OTP verified!");
       setTimeout(() => navigate("/dashboard"), 800);
     } catch (err) {
       toast.error(err.response?.data?.message || "Verification failed");
@@ -86,7 +97,7 @@ const VerifyLoginOTP = () => {
       const email = localStorage.getItem("email");
       if (!email) return toast.error("Missing email");
 
-      await axios.post(`${API_BASE_URL}/admin/resend-otp/${email}`);
+      await adminApi.resendOtp(email);
       toast.success("New OTP sent successfully!");
       setOtp(new Array(6).fill(""));
       setIsExpired(false);

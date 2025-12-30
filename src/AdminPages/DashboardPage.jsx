@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { adminApi } from "../api/adminApi";
+import { useNavigate } from "react-router-dom";
 import {
   User,
-  ShoppingBag,
   TrendingUp,
   Activity,
   Clock,
-  PlusCircle,
-  FileText,
+  Package
+  
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -22,25 +22,44 @@ import {
   Bar,
 } from "recharts";
 
+
+
 const Dashboard = () => {
   const [userCount, setUserCount] = useState(0);
+  const [productCount, setProductCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [salesData, setSalesData] = useState([]);
   const [ordersData, setOrdersData] = useState([]);
   const [recentUsers, setRecentUsers] = useState([]);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const res = await adminApi.getUsers(1, 5);
-        setUserCount(res.data.pagination.total);
-        setRecentUsers(res.data.users);
+        const payload = res?.data || {};
+        // support multiple backend shapes
+        const usersFromPayload = payload.users || payload.data?.users || payload.data || payload.results || [];
+        const totalFromPayload =
+          payload.pagination?.total || payload.data?.pagination?.total || payload.pagination?.totalPages || payload.data?.pagination?.totalPages || usersFromPayload.length || 0;
+
+        setUserCount(totalFromPayload);
+        setRecentUsers(Array.isArray(usersFromPayload) ? usersFromPayload : []);
       } catch (error) {
         console.error("Failed to fetch users", error);
       } finally {
         setLoading(false);
       }
     };
+    const fetchProducts = async () => {
+      try {
+        const res = await adminApi.getProducts(1, 5);
+        setProductCount(res.data?.totalProducts || 0);
+        // handle products if needed
+      } catch (error) {
+        console.error("Failed to fetch products", error);
+      } 
+    };
+    
 
     const mockSales = [
       { day: "Mon", sales: 250, orders: 12 },
@@ -55,6 +74,7 @@ const Dashboard = () => {
     setSalesData(mockSales);
     setOrdersData(mockSales);
     fetchUsers();
+    fetchProducts();
   }, []);
 
   if (loading)
@@ -72,35 +92,37 @@ const Dashboard = () => {
       value: userCount,
       icon: <User className="w-6 h-6 sm:w-7 sm:h-7" />,
       color: "bg-gradient-to-tr from-blue-500 to-blue-400",
-      growth: "12%",
+      
+      navigate: () => navigate("/users-list"),
     },
     {
-      title: "Total Orders",
-      value: "189",
-      icon: <ShoppingBag className="w-6 h-6 sm:w-7 sm:h-7" />,
+      title: "Total Products",
+      value: productCount,
+      icon: <Package  className="w-6 h-6 sm:w-7 sm:h-7" />,
       color: "bg-gradient-to-tr from-green-500 to-green-400",
-      growth: "8%",
+      
+      navigate: () => navigate("/products-list"),
     },
     {
       title: "Revenue (USD)",
       value: "$12,540",
       icon: <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7" />,
       color: "bg-gradient-to-tr from-purple-500 to-purple-400",
-      growth: "15%",
+
     },
     {
       title: "Active Sessions",
       value: "34",
       icon: <Activity className="w-6 h-6 sm:w-7 sm:h-7" />,
       color: "bg-gradient-to-tr from-pink-500 to-pink-400",
-      growth: "5%",
+     
     },
     {
       title: "Pending Orders",
       value: "4",
       icon: <Clock className="w-6 h-6 sm:w-7 sm:h-7" />,
       color: "bg-gradient-to-tr from-yellow-400 to-yellow-300",
-      growth: "2%",
+      
     },
   ];
 
@@ -110,45 +132,26 @@ const Dashboard = () => {
         Dashboard Overview
       </h1>
 
-      {/* Quick Actions */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow"
-        >
-          <PlusCircle /> Add User
-        </motion.button>
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow"
-        >
-          <PlusCircle /> Add Product
-        </motion.button>
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg shadow"
-        >
-          <FileText /> Generate Report
-        </motion.button>
-      </div>
+      
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 mb-8">
         {stats.map((stat, index) => (
-          <motion.div
+          <motion.div 
             key={index}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            className="flex justify-between items-center p-4 sm:p-5 bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300"
+            onClick={stat.navigate}
+            className="flex justify-between cursor-pointer items-center p-4 sm:p-5 bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300"
           >
-            <div className="flex flex-col">
+            <div className="flex flex-col ">
               <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                 {stat.title}
               </p>
               <h2 className="mt-1 text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {stat.value}
               </h2>
-              <span className="text-green-500 text-xs mt-1">{stat.growth} ↑</span>
+              
             </div>
             <div className={`p-3 rounded-full text-white shadow-lg ${stat.color}`}>
               {stat.icon}
@@ -221,7 +224,7 @@ const Dashboard = () => {
                   key={i}
                   className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                 >
-                  <td className="px-4 py-2">{user.name}</td>
+                  <td className="px-4 py-2">{user.username}</td>
                   <td className="px-4 py-2">{user.email}</td>
                   <td className="px-4 py-2">{new Date(user.createdAt).toLocaleDateString()}</td>
                 </tr>

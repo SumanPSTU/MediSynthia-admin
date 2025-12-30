@@ -28,6 +28,7 @@ export const adminApi = {
   login: (data) => apiClient.post('/admin/login', data),
   verifyOtp: (email, data) => apiClient.post(`/admin/verify/${email}`, data),
   logout: () => apiClient.post('/admin/logout'),
+  resendEmail: () => apiClient.post('/admin/resend-verification'),
 
   // Password Reset
   forgetPassword: (data) => apiClient.post('/admin/forget', data),
@@ -45,4 +46,42 @@ export const adminApi = {
   deletePrescription: (id) => apiClient.delete(`/admin/delete-prescription/${id}`),
   deleteOldPrescriptions: (date) =>
     apiClient.delete('/admin/delete-prescriptions-before-date', { data: { date } }),
+  // OTP / verification helpers
+  resendOtp: (email) => apiClient.post(`/admin/resend-otp/${email}`),
+  verifyWithToken: (token) => apiClient.post('/admin/verify', {}, { headers: { Authorization: `Bearer ${token}` } }),
+  // Products
+  getProducts: (page = 1, limit = 10) =>
+    apiClient.get(`/product/getproduct?page=${page}&&limit=${limit}`),
+  searchProducts: (search) =>
+    apiClient.get(`product/search?search=${encodeURIComponent(search)}`),
+  getProductById: (id) => apiClient.get(`/product/getproduct/${id}`),
+  createProduct: (data) => {
+  // If uploading an image (FormData), send multipart
+  if (data instanceof FormData) {
+    return apiClient.post('/product/addproduct', data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  }
+
+  // fallback (no image)
+  return apiClient.post('/product/addproduct', data);
+},
+
+  updateProduct: (id, data) => {
+    // support FormData (file upload) and JSON
+    if (data instanceof FormData) {
+      return apiClient.put(`/product/updateproduct/${id}`, data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    }
+    return apiClient.put(`/product/updateproduct/${id}`, data);
+  },
+  // Toggle availability using the dedicated endpoint (server toggles value)
+  toggleAvailability: (id) => apiClient.put(`/product/isavailable/${id}`),
+  // Delete product (backend endpoint expects this path)
+  deleteProduct:  (id) => apiClient.delete(`product/deleteproduct/${id}`),
+  // Categories / Subcategories
+  getCategories: () => apiClient.get('/category'),
+  getSubcategories: () => apiClient.get('/subcategory'),
+
 };
