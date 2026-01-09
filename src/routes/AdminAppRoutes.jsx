@@ -14,6 +14,7 @@ import OrderListPage from '../AdminPages/OrderListPage.jsx';
 import RegisterAdminInfo from '../AdminPages/RegisterAdminInfo.jsx';
 import OrderDetailsPage from '../AdminPages/OrderDetailsPage.jsx';
 import NotFoundPage from '../AdminPages/NotFoundPage.jsx';
+import PrescriptionUploaded from '../AdminPages/PrescriptionUploaded.jsx';
 // Context
 import { useAuth } from '../hooks/useAuth.js';
 import VerifyAdmin from '../AdminPages/VerifyAdmin.jsx';
@@ -58,6 +59,7 @@ const AppRoutes = () => {
         <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
         <Route path="/users-list" element={<PrivateRoute><UserListPage /></PrivateRoute>} />
         <Route path="/products-list" element={<PrivateRoute><ProductsListPage /></PrivateRoute>} />
+        <Route path="/prescription-uploaded" element={<PrivateRoute><PrescriptionUploaded /></PrivateRoute>} />
         {/* <Route path="/product/:id" element={<PrivateRoute><ProductDetails /></PrivateRoute>} /> */}
         <Route path="/orders-list" element={<PrivateRoute><OrderListPage /></PrivateRoute>} />
           <Route path="*" element={<NotFoundPage />} />

@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from "react";
+import { motion } from 'framer-motion';
 import { adminApi } from "../api/adminApi";
-import { Loader2, Search, RefreshCcw, SortAsc, SortDesc } from "lucide-react";
+import { Loader2, Search, RefreshCcw, SortAsc, SortDesc, Users } from "lucide-react";
 import toast from "react-hot-toast";
+
+const StatCard = ({ title, value }) => (
+  <div className="bg-white p-4 rounded-xl shadow-sm flex flex-col items-center hover:shadow-lg transition">
+    <p className="text-sm text-gray-500">{title}</p>
+    <h2 className="text-2xl font-bold text-gray-800 mt-1">{value}</h2>
+  </div>
+);
 
 const UserListPage = () => {
   const [users, setUsers] = useState([]);
@@ -11,6 +19,15 @@ const UserListPage = () => {
   const [loading, setLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [sortOrder, setSortOrder] = useState("desc");
+  const [filterStatus, setFilterStatus] = useState("All");
+
+  const filteredUsers = users.filter((u) => {
+    if (filterStatus === "Active") return !u.isBlocked;
+    if (filterStatus === "Blocked") return u.isBlocked;
+    return true; // All
+  });
+
+  const total = users.length;
 
   useEffect(() => {
     fetchUsers();
@@ -39,14 +56,14 @@ const UserListPage = () => {
       setLoading(true);
       const response = await adminApi.searchUsers(search);
       if (response.data.success) {
-        
+
         setUsers(response.data.results || []); // <-- corrected here
-  
+
         setTotalPages(1);
         setPage(1);
       }
     } catch (error) {
-    
+
       toast.error("Search failed");
     } finally {
       setLoading(false);
@@ -58,25 +75,46 @@ const UserListPage = () => {
     fetchUsers();
   };
 
-  const toggleSortOrder = () => {
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-  };
 
   return (
-    <section className="max-w-7xl mx-auto mt-10 px-4">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-semibold text-gray-800">
-          👥 User Management
-        </h2>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={toggleSortOrder}
-            className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition"
-          >
-            {sortOrder === "asc" ? <SortAsc size={18} /> : <SortDesc size={18} />}
-            <span className="text-sm">Sort</span>
-          </button>
+    <section className=" mx-auto mt-6 px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6 rounded-2xl bg-emerald-500 p-6 text-white shadow-lg"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-3">
+              <Users className="h-7 w-7" />
+              <h1 className="text-2xl font-semibold"> Users</h1>
+            </div>
+            <p className="text-gray-200 text-sm mt-1">Monitor, block, or unblock users in your system</p>
+          </div>
+
+          {/* Search */}
+          <div onKeyUp={handleSearch} className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search user..."
+              className="w-full rounded-lg bg-white/90 pl-9 pr-10 py-2 text-sm sm:text-base text-gray-800 focus:outline-none focus:ring-2 focus:ring-white"
+            />
+
+            {search && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm"
+              >
+                clear
+              </button>
+            )}
+          </div>
+
           <button
             onClick={fetchUsers}
             className="flex items-center gap-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-2 rounded-lg transition"
@@ -84,31 +122,33 @@ const UserListPage = () => {
             <RefreshCcw size={16} /> <span className="text-sm">Refresh</span>
           </button>
         </div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {[
+          { label: "All", value: users.length },
+          { label: "Active", value: users.filter(u => !u.isBlocked).length },
+          { label: "Blocked", value: users.filter(u => u.isBlocked).length },
+          { label: "Page", value: page, infoOnly: true },
+        ].map(({ label, value, infoOnly }) => {
+          const isActive = filterStatus === label;
+
+          return (
+            <button
+              key={label}
+              disabled={infoOnly}
+              onClick={() => !infoOnly && setFilterStatus(label)}
+              className={`
+          rounded-xl transition transform hover:scale-[1.02]
+          ${isActive ? "ring-2 ring-emerald-500" : ""}
+          ${infoOnly ? "cursor-default" : ""}
+        `}
+            >
+              <StatCard title={label} value={value} />
+            </button>
+          );
+        })}
       </div>
-
-      {/* Search */}
-      <form onKeyUp={handleSearch} className="flex items-center gap-3 mb-6">
-        <div className="flex items-center w-full md:w-96 border border-gray-300 rounded-md px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500 bg-white">
-          <Search className="w-5 h-5 text-gray-500 mr-2" />
-          <input
-            type="text"
-            placeholder="Search by name or email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full outline-none text-gray-700"
-          />
-        </div>
-        {search && (
-          <button
-            type="button"
-            onClick={clearSearch}
-            className="text-sm underline text-gray-500 hover:text-gray-700"
-          >
-            Clear
-          </button>
-        )}
-      </form>
-
       {/* Table */}
       <div className="overflow-x-auto rounded-lg shadow border border-gray-200 bg-white">
         {loading ? (
