@@ -27,6 +27,8 @@ import {
 const Dashboard = () => {
   const [userCount, setUserCount] = useState(0);
   const [productCount, setProductCount] = useState(0);
+  const [orderCount, setOrderCount] = useState(0);
+
   const [loading, setLoading] = useState(true);
   const [salesData, setSalesData] = useState([]);
   const [ordersData, setOrdersData] = useState([]);
@@ -59,6 +61,26 @@ const Dashboard = () => {
         console.error("Failed to fetch products", error);
       } 
     };
+
+    const fetchOrders = async () => {
+      try {
+        const res = await adminApi.getOrders(1, 5);
+        setOrderCount(res.data?.totalOrders || 0);
+        // handle orders if needed
+      } catch (error) {
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          console.error("Failed to fetch orders: Server responded with error", error.response.status, error.response.data);
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.error("Failed to fetch orders: No response received from server", error.request);
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.error("Failed to fetch orders: Error in request setup", error.message);
+        }
+      } 
+    };
     
 
     const mockSales = [
@@ -75,6 +97,7 @@ const Dashboard = () => {
     setOrdersData(mockSales);
     fetchUsers();
     fetchProducts();
+    fetchOrders();
   }, []);
 
   if (loading)
@@ -119,7 +142,7 @@ const Dashboard = () => {
     },
     {
       title: "Pending Orders",
-      value: "4",
+      value: orderCount,
       icon: <Clock className="w-6 h-6 sm:w-7 sm:h-7" />,
       color: "bg-gradient-to-tr from-yellow-400 to-yellow-300",
       
@@ -143,7 +166,7 @@ const Dashboard = () => {
             whileTap={{ scale: 0.97 }}
             onClick={stat.navigate}
             className="flex justify-between cursor-pointer items-center p-4 sm:p-5 bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300"
-          >
+          > 
             <div className="flex flex-col ">
               <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                 {stat.title}

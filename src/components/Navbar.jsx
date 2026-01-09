@@ -30,14 +30,14 @@ export default function AdminNavbar() {
     }
   };
 
-  
+
 
   const navLinks = [
     { name: "Dashboard", to: "/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
     { name: "Users", to: "/users-list", icon: <Users className="w-5 h-5" /> },
     { name: "Products", to: "/products-list", icon: <Pill className="w-5 h-5" /> },
     { name: "Orders", to: "/orders-list", icon: <ShoppingBag className="w-5 h-5" /> },
-    {name:"Prescriptions", to:"/prescriptions-list", icon:<File className="w-5 h-5"/>}
+    { name:"Prescriptions", to:"/prescription-uploaded", icon:<File className="w-5 h-5"/>}
   ];
 
   const NavLinks = ({ onClick, vertical }) => (

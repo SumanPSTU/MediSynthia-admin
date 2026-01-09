@@ -49,6 +49,7 @@ export const adminApi = {
   // OTP / verification helpers
   resendOtp: (email) => apiClient.post(`/admin/resend-otp/${email}`),
   verifyWithToken: (token) => apiClient.post('/admin/verify', {}, { headers: { Authorization: `Bearer ${token}` } }),
+
   // Products
   getProducts: (page = 1, limit = 10) =>
     apiClient.get(`/product/getproduct?page=${page}&&limit=${limit}`),
@@ -56,16 +57,16 @@ export const adminApi = {
     apiClient.get(`product/search?search=${encodeURIComponent(search)}`),
   getProductById: (id) => apiClient.get(`/product/getproduct/${id}`),
   createProduct: (data) => {
-  // If uploading an image (FormData), send multipart
-  if (data instanceof FormData) {
-    return apiClient.post('/product/addproduct', data, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-  }
+    // If uploading an image (FormData), send multipart
+    if (data instanceof FormData) {
+      return apiClient.post('/product/addproduct', data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    }
 
-  // fallback (no image)
-  return apiClient.post('/product/addproduct', data);
-},
+    // fallback (no image)
+    return apiClient.post('/product/addproduct', data);
+  },
 
   updateProduct: (id, data) => {
     // support FormData (file upload) and JSON
@@ -79,9 +80,21 @@ export const adminApi = {
   // Toggle availability using the dedicated endpoint (server toggles value)
   toggleAvailability: (id) => apiClient.put(`/product/isavailable/${id}`),
   // Delete product (backend endpoint expects this path)
-  deleteProduct:  (id) => apiClient.delete(`product/deleteproduct/${id}`),
+  deleteProduct: (id) => apiClient.delete(`product/deleteproduct/${id}`),
   // Categories / Subcategories
   getCategories: () => apiClient.get('/category'),
   getSubcategories: () => apiClient.get('/subcategory'),
 
+  //order
+  getOrders: (page = 1, limit = 10) =>
+    apiClient.get(`/order/admin/orders?page=${page}&limit=${limit}`),
+  // searchOrders: (search) =>
+  //   apiClient.get(`order/search?search=${encodeURIComponent(search)}`),
+  getOrderById: (id) => apiClient.get(`/order/getOrderById/${id}`),
+  // createOrder: (data) => {
+  //   if (data instanceof FormData) {
+  //     return apiClient.post('/order/createOrder', data, {
+  //       headers: { 'Content-Type': 'multipart/form-data' },
+  //     });
+  //   },
 };

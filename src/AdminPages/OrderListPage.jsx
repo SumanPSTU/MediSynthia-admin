@@ -8,7 +8,8 @@ import {
   Clock,
   XCircle,
   Truck,
-  ChevronDown
+  ChevronDown,
+  RefreshCcw
 } from 'lucide-react';
 
 const initialOrders = [
@@ -59,30 +60,111 @@ const statusConfig = {
 
 const statusOptions = ['Pending', 'On the Way', 'Completed', 'Cancelled'];
 
+const StatCard = ({ title, value, className }) => (
+  <div
+    className={`p-3 rounded-xl shadow-sm flex flex-col items-center transition ${className}`}
+  >
+    <p className="text-sm font-medium">{title}</p>
+    <h2 className="text-2xl font-bold mt-1">{value}</h2>
+  </div>
+);
+
+const statColorMap = {
+  All: "bg-gray-100 text-gray-700 hover:bg-gray-200",
+  Pending: "bg-yellow-100 text-yellow-700 hover:bg-yellow-200",
+  "On the Way": "bg-blue-100 text-blue-700 hover:bg-blue-200",
+  Completed: "bg-green-100 text-green-700 hover:bg-green-200",
+  Cancelled: "bg-red-100 text-red-700 hover:bg-red-200",
+};
+
+
 function OrderListPage() {
   const [orders, setOrders] = useState(initialOrders);
   const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState("All");
+  const total = orders.length;
+  const pendingCount = orders.filter(o => o.status === "Pending").length;
+  const completedCount = orders.filter(o => o.status === "Completed").length;
+  const cancelledCount = orders.filter(o => o.status === "Cancelled").length;
+  const onTheWayCount = orders.filter(o => o.status === "On the Way").length;
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [newOrder, setNewOrder] = useState({
+    customer: '',
+    email: '',
+    date: '',
+    total: '',
+    orderStatus: 'pending',
+  });
+
+
+  const stats = [
+    { label: "All", value: total },
+    { label: "Pending", value: pendingCount },
+    { label: "On the Way", value: onTheWayCount },
+    { label: "Completed", value: completedCount },
+    { label: "Cancelled", value: cancelledCount },
+  ];
 
   const handleStatusChange = (orderId, newStatus) => {
-    setOrders((prev) =>
-      prev.map((order) =>
+    setOrders(prev =>
+      prev.map(order =>
         order.id === orderId
           ? { ...order, status: newStatus }
           : order
       )
     );
-    // TODO: Connect to backend API to update status
   };
 
-  const filteredOrders = orders.filter(
-    (o) =>
-      o.id.toLowerCase().includes(search.toLowerCase()) ||
-      o.customer.toLowerCase().includes(search.toLowerCase()) ||
-      o.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleRefresh = () => {
+    setOrders([...initialOrders]);
+    setSearch('');
+    setFilterStatus('All');
+  };
+
+  const handleAddOrder = (e) => {
+    e.preventDefault();
+
+    if (editingId) {
+      // Edit existing order
+      setOrders(prev =>
+        prev.map(o => o.id === editingId ? { ...o, ...newOrder } : o)
+      );
+      toast.success("Order updated!");
+    } else {
+      // Create new order
+      const newId = `ORD-${Math.floor(Math.random() * 9000) + 1000}`;
+      setOrders(prev => [...prev, { id: newId, ...newOrder }]);
+      toast.success("Order created!");
+    }
+
+    setShowAddModal(false);
+    setNewOrder({
+      customer: "",
+      email: "",
+      date: "",
+      total: "",
+      status: "Pending",
+    });
+    setEditingId(null);
+  };
+
+  // combined filtering
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch =
+      order.id.toLowerCase().includes(search.toLowerCase()) ||
+      order.customer.toLowerCase().includes(search.toLowerCase()) ||
+      order.email.toLowerCase().includes(search.toLowerCase());
+
+    const matchesStatus =
+      filterStatus === "All" || order.status === filterStatus;
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
-    <div className="p-6">
+    <div className="mx-auto mt-6 px-4">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -102,12 +184,61 @@ function OrderListPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search orders..."
+              placeholder="Search order..."
               className="w-full rounded-lg bg-white/90 pl-9 pr-3 py-2 text-sm sm:text-base text-gray-800 focus:outline-none focus:ring-2 focus:ring-white"
             />
           </div>
+
+          <div className="flex justify-between items-center gap-4">
+            <button
+              onClick={() => {
+                setEditingId(null);
+                setNewOrder({
+                  customer: "",
+                  email: "",
+                  date: "",
+                  total: "",
+                  status: "Pending",
+                });
+                setShowAddModal(true);
+              }}
+              className="flex items-center gap-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-2 rounded-lg transition"
+            >
+              Create Order
+            </button>
+
+            <button
+              onClick={handleRefresh}
+              className="flex items-center gap-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-2 rounded-lg transition"
+            >
+              <RefreshCcw size={16} /> <span className="text-sm">Refresh</span>
+            </button>
+          </div>
+
         </div>
       </motion.div>
+
+      {/* Stats + Filters */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        {stats.map(({ label, value }) => {
+          const isActive = filterStatus === label;
+
+          return (
+            <button
+              key={label}
+              onClick={() => setFilterStatus(label)}
+              className={`rounded-xl transition transform hover:scale-[1.02] ${isActive ? "ring-2 ring-emerald-500" : ""
+                }`}
+            >
+              <StatCard
+                title={label}
+                value={value}
+                className={statColorMap[label]}
+              />
+            </button>
+          );
+        })}
+      </div>
 
       {/* Desktop Table */}
       <div className="hidden md:block bg-white rounded-2xl shadow-md overflow-hidden">
