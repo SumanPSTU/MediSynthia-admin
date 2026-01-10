@@ -60,20 +60,37 @@ const ProductsPage = () => {
         console.error("Failed to load categories", err?.response || err);
       }
     };
-    const loadSubcats = async () => {
-      try {
-        const res = await adminApi.getSubcategories();
-        const payload = res?.data || {};
-        const subs = payload.subcategories || payload.data || payload.results || payload || [];
-        setSubcategories(Array.isArray(subs) ? subs : []);
-      } catch (err) {
-        console.error("Failed to load subcategories", err?.response || err);
-      }
-    };
-
+    
     loadCats();
-    loadSubcats();
   }, []);
+
+  useEffect(() => {
+  if (!showAddModal) return; 
+  if (!newProduct.category) {
+    setSubcategories([]);
+    return;
+  }
+
+  const loadSubcategories = async () => {
+    try {
+      const res = await adminApi.getSubcategoriesByCategory(newProduct.category);
+      const payload = res?.data || {};
+      const subs =
+        payload.subcategories ||
+        payload.data ||
+        payload.results ||
+        payload ||
+        [];
+
+      setSubcategories(Array.isArray(subs) ? subs : []);
+    } catch (err) {
+      console.error("Failed to load subcategories", err);
+      setSubcategories([]);
+    }
+  };
+
+  loadSubcategories();
+}, [newProduct.category, showAddModal]);
 
   const fetchProducts = async () => {
     try {

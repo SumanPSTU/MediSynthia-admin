@@ -51,7 +51,7 @@ export const adminApi = {
   verifyWithToken: (token) => apiClient.post('/admin/verify', {}, { headers: { Authorization: `Bearer ${token}` } }),
 
   // Products
-  getProducts: (page = 1, limit = 10) =>
+  getProducts: (page = 1, limit = 50) =>
     apiClient.get(`/product/getproduct?page=${page}&&limit=${limit}`),
   searchProducts: (search) =>
     apiClient.get(`product/search?search=${encodeURIComponent(search)}`),
@@ -77,13 +77,13 @@ export const adminApi = {
     }
     return apiClient.put(`/product/updateproduct/${id}`, data);
   },
-  // Toggle availability using the dedicated endpoint (server toggles value)
+ 
   toggleAvailability: (id) => apiClient.put(`/product/isavailable/${id}`),
   // Delete product (backend endpoint expects this path)
   deleteProduct: (id) => apiClient.delete(`product/deleteproduct/${id}`),
   // Categories / Subcategories
   getCategories: () => apiClient.get('/category'),
-  getSubcategories: () => apiClient.get('/subcategory'),
+  getSubcategories: (categoryId) => apiClient.getSubcategoriesByCategory(`/by-category/${categoryId}`),
 
   //order
   getOrders: (page = 1, limit = 10) =>
@@ -97,4 +97,5 @@ export const adminApi = {
   //       headers: { 'Content-Type': 'multipart/form-data' },
   //     });
   //   },
+  getAllPrescriptions: () => apiClient.get('/admin/get-all-prescription')
 };

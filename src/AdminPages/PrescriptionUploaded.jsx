@@ -32,9 +32,9 @@ const PrescriptionListPage = () => {
     const loadPrescriptions = async () => {
         try {
             setLoading(true);
-            const res = await adminApi.getPrescriptions(page, limit, filterStatus === "All" ? "" : filterStatus);
+            const res = await adminApi.getAllPrescriptions(page, limit);
             setPrescriptions(res.data.prescriptions);
-            setTotal(res.data.totalPrescriptions);
+            setTotal(res.data.totalItems);
         } catch (err) {
             console.error(err);
             toast.error("Failed to load prescriptions");
@@ -45,7 +45,7 @@ const PrescriptionListPage = () => {
 
     useEffect(() => {
         loadPrescriptions();
-    }, [page, filterStatus]);
+    }, [page]);
 
     // Debounced search
     useEffect(() => {
